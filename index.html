@@ -1,74 +1,70 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>ThermoLeaf Dashboard</title>
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            text-align: center;
-            background: #e8f5e9;
-            padding: 40px;
-            color: #1b5e20;
-        }
-        .card {
-            background: white;
-            padding: 20px;
-            margin: 15px auto;
-            border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            width: 280px;
-        }
-        #status { font-size: 1.1em; color: #bf360c; }
-    </style>
+  <title>ThermoLeaf Dashboard</title>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #e8f5e9;
+      padding: 40px;
+      color: #1b5e20;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      margin: 15px auto;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      width: 280px;
+    }
+    #status {
+      font-size: 1.1em;
+      color: #bf360c;
+    }
+  </style>
 </head>
+
 <body>
 
 <h1>🌿 ThermoLeaf Live Dashboard</h1>
 
 <div class="card">
-    <h2>🌡 Temperature</h2>
-    <p id="temp">-- °C</p>
+  <h2>🌡 Temperature</h2>
+  <p id="temp">-- °C</p>
 </div>
 
 <div class="card">
-    <h2>💧 Humidity</h2>
-    <p id="hum">-- %</p>
+  <h2>🔥 Status</h2>
+  <p id="status">--</p>
 </div>
-
-<div class="card">
-    <h2>☀️ Heat Index</h2>
-    <p id="heat">-- °C</p>
-</div>
-
-<div class="card" id="status">Status: --</div>
 
 <script>
-const API_URL = "http://10.52.99.209:8000/api/sensor-data/";  // your Django endpoint
+  // ✅ YOUR Firebase database
+  firebase.initializeApp({
+    databaseURL: "https://thermoleaf-52a49-default-rtdb.firebaseio.com/"
+  });
 
-function updateData() {
-    fetch(API_URL)
-        .then(res => res.json())
-        .then(data => {
-            const t = data.temperature?.toFixed(1);
-            const h = data.humidity?.toFixed(1);
-            const hi = data.heat_index?.toFixed(1);
+  const db = firebase.database().ref("sensor");
 
-            document.getElementById("temp").innerText = t + " °C";
-            document.getElementById("hum").innerText = h + " %";
-            document.getElementById("heat").innerText = hi + " °C";
+  db.on("value", snapshot => {
+    const data = snapshot.val();
+    if (!data) return;
 
-            // Status logic
-            let status = "";
-            if (t < 30) status = "🔥 Add fuel to reach 30°C!";
-            else status = "✅ Temperature is good.";
+    const t = data.temperature;
 
-            document.getElementById("status").innerText = "Status: " + status;
-        })
-        .catch(err => console.log("Error:", err));
-}
+    document.getElementById("temp").innerText = t.toFixed(1) + " °C";
 
-updateData();
-setInterval(updateData, 5000);
+    document.getElementById("status").innerText =
+      t < 30
+      ? "🔥 Add fuel to reach 30°C"
+      : "✅ Temperature is good";
+  });
 </script>
 
 </body>
